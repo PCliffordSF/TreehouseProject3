@@ -1,21 +1,24 @@
-
-
+// Set focus on the first text field
 // puts the name field in focus on load
 $( document ).ready( function(){
   $("#name").focus();
 });
 
+
+// Job Role section of the form. Reveal a text field when the "Other" option is selected from the "Job Role" drop down menu
+// function which creates the other job title text field
+var createJobTitleField = function() {
+	$("fieldset:first").append("<input type='text' id='other-title' placeholder='Your Title'>");
+};
+
+// T-Shirt Info section of the form. For the T-Shirt color menu, only display the options that match the design selected in the "Design" menu.
+// I would do this differently if I had to do it again, but it works
 var arrayOfColors = $.makeArray($("#color").children());
 
 // function which removes all the color options
 var removeAllColorOptions = function() {
 	$("#color").children().remove();
-}
-
-// function which creates the other job title text field
-var createJobTitleField = function() {
-	$("fieldset:first").append("<input type='text' id='other-title' placeholder='Your Title'>");
-}
+};
 
 // adds the event listener and function to add other job title text field
 $("#title").change(function(){
@@ -26,11 +29,11 @@ $("#title").change(function(){
 	}
 });
 
-
+// this section changes the design color drop down menu
 $("#design").change(function() {
 	removeAllColorOptions();
 	var jsPuns = "(JS Puns shirt only)";
-	var hearJS = "(I"
+	var hearJS = "(I";
 	switch( $("#design").val() ) {
 		case "js puns":
 			arrayOfColors.forEach(function(colorChoice){
@@ -39,7 +42,7 @@ $("#design").change(function() {
 					$("#color").append(colorChoice);
 				}
 				$("#color")[0].selectedIndex = 0;
-			})
+			});
 
 			break;
 		case "heart js":
@@ -49,27 +52,26 @@ $("#design").change(function() {
 					$("#color").append(colorChoice);
 				}
 				$("#color")[0].selectedIndex = 0;
-			})
+			});
 			break;
 		case "Select Theme":
 				arrayOfColors.forEach(function(colorChoice){
 					$("#color").append(colorChoice);
-			})
+			});
 				$("#color")[0].selectedIndex = 0;
 	}
 
 });
 
-
-var checkboxes = $('[type=checkbox]');
 var totalCost = 0;
-
-checkboxes.change(function(){
+// if I did this again, I would use a function in place of this global variable 
+// this updates the total cost of the boxes selected
+$('[type=checkbox]').change(function(){
 
 	if ( $(this)['0'].checked && $(this)['0'].name === "all"){
-		totalCost += 200
+		totalCost += 200;
 	} else if (!($(this)['0'].checked) && $(this)['0'].name === "all") {
-		totalCost -= 200
+		totalCost -= 200;
 	} else if ($(this)['0'].checked) {
 		totalCost += 100;
 	} else {
@@ -85,13 +87,14 @@ var createTotal = function(htmlString, totalCost) {
 	if (totalCost !== 0) {
 		$(".activities").append($(htmlString));
 	}
-} 
+};
 
-// global variable of activities array
+// this is the section where I disable activities that are scheduled at the same time. I spent a lot of time working
+// on a general solution, but the data is storied as innerHTML, and tyring to parse it was way too hard. 
 var arrayOfActivities = $.makeArray($('.activities label'));
 
-checkboxes.change(function(){
-	// I hate this solution, but using data sourced from an innerHTML makes solving for the general case enormously complex. 
+$('[type=checkbox]').change(function(){
+	// don't like this so much, but it works
 	if ($(this)['0'].name === 'js-libs' && $(this)['0'].checked) {
 		arrayOfActivities[4].children['0'].disabled = true;
 	} else if ($(this)['0'].name === 'js-libs' && !$(this)['0'].checked) {
@@ -116,12 +119,14 @@ checkboxes.change(function(){
 
 });
 
+// this is the section which hides the payment infomation which is not selected.
+
 function hideParagraphs() {
-	$("fieldset:last div p").addClass("is-hidden");
+	return $("fieldset:last div p").addClass("is-hidden");
 }
 hideParagraphs();
 
-
+// this is the part that changes what is displayed based on the payment option selected
 $("#payment").change(function(){
 	if ($(this).val() === "credit card") {
 		$("#credit-card").removeClass("is-hidden");
@@ -135,41 +140,25 @@ $("#payment").change(function(){
 		$("fieldset:last div p")['0'].classList = "is-hidden";
 		$("fieldset:last div p")['1'].classList = "";
 	}
-
 });
 
-
-
-
-
-
+// button mousedown function which checks validation
+// now this, this I like this solution
 $("button").mousedown(function() {
-	// console.log(activitySelected());
-	ccvAndZip();
-	// console.log("name entered");
-	// console.log($("#name").val());
-
-	// console.log("valid email");
-	// console.log(validEmail.test($("#mail").val())); //email address validated
-
-	// console.log("activity selected");
-	// console.log(activitySelected());
-
-	// console.log("selected payment (should not equal select_method)");
-	// console.log($("#payment").val());  //payment method selected
-
-	// console.log("valid CC");
-	// console.log(valid_credit_card($("#cc-num").val())); //credit card validated
-
-
-	// if ($("#name").val() === "" || (!validEmail.test($("#mail").val())) || !activitySelected()) {
-	// 	invalidForm();
-	// }
-})
+	if(!nameEntered() || ! validEmailAddress() || !activitySelected() || !paymentOptionSelected() || !ccvAndZipEntered()) {
+		if ($("#payment").val() !== "credit card") {
+			invalidForm();
+		} else {
+			if(!validCreditCard($("#cc-num").val()) || $("#cc-num").val() === "") {
+				invalidForm();
+			}
+		}
+	}
+});
 
 // function which checks if a name has been entered
 function nameEntered() {
-	return ($("#name").val() !== "") ? true : false
+	return ($("#name").val() !== "") ? true : false;
 }
 
 // function which checks the validity of the email address
@@ -186,23 +175,21 @@ function activitySelected() {
 		if ($(this).prop("checked")) {
 			selectedActivityCount += 1;
 		}
-	})
-	return (selectedActivityCount > 0) ? true : false
+	});
+	return (selectedActivityCount > 0) ? true : false;
 }
 
 // function which determines if a payment option has been selected
 function paymentOptionSelected() {
-	return ($("#payment").val() !== "select_method") ? true : false
+	return ($("#payment").val() !== "select_method") ? true : false;
 }
 
 // function which determins if a zip code and 3 digit ccv number has been selected
-
-function ccvAndZip() {
-	var zip = $("#zip").val();
-	console.log(zip);
+// I didn't validate these, I could but it's time to move on to the next project, and it's an unrequested feature.
+function ccvAndZipEntered() {
+	return ($("#zip").val() !== "" && $("#cvv").val() !== "") ? true : false;
 }
 
-ccvAndZip();
 // functioin which checks the validity of the credit card number entered
 // pulled this from DiegoSalazar on github. I don't need to reinvent the wheel
 function validCreditCard(value) {
@@ -220,9 +207,8 @@ function validCreditCard(value) {
 		nCheck += nDigit;
 		bEven = !bEven;
 	}
-	return (nCheck % 10) == 0;
+	return (nCheck % 10) === 0;
 }
-
 
 // function which sets the form to invalid
 function invalidForm() {
@@ -238,59 +224,10 @@ function invalidForm() {
 	$(".shirt legend p").css("color", "red");
 }
 
-
-
-// checkboxes.change(function(){
-// 	var timeArray = [
-// 		[/Tuesday/, /Wednesday/],.addClass(".is-hidden")
-// 		[/9am-12pm/, /1pm-4pm/]
-// 	]
-// 	var textString = new RegExp($(this).parent()['0'].innerHTML);
-
-
-// 	setTime(timeArray, textString);
-
-// 	var thisName = ($(this)['0'].name);
-// 	console.log(thisName);
-
-
-// 	arrayOfActivities.forEach(function(activity){
-
-// 		// need to set the text string for the RegExp
-		
-// 		var textString2 = new RegExp(activity.innerHTML);
-
-// 		var arrayName = activity.children['0'].name;
-// 		if (getTime(timeArray, textString2) === "tuesdayAM" && tuesdayAM === true && thisName !== arrayName) {
-// 			activity.children['0'].disabled = true;
-// 		}
-// 		if (getTime(timeArray, textString2) === "tuesdayPM" && tuesdayPM === true && thisName !== arrayName) {
-// 			activity.children['0'].disabled = true;
-// 		}
-
-// 	});
-// });
-
-
-// // sets the boolean time value for later testing;
-// var setTime = function(timeArray, textString) {
-// 	for (var i = 0; i < timeArray.length; i++) {
-// 		for (var j = 0; j < timeArray.length; j++){
-// 			if (timeArray[0][0].test(textString) && timeArray[1][0].test(textString)) {tuesdayAM = true;}
-// 			if (timeArray[0][1].test(textString) && timeArray[1][0].test(textString)) {wednesdayAM = true;}
-// 			if (timeArray[0][0].test(textString) && timeArray[1][1].test(textString)) {tuesdayPM = true;}
-// 			if (timeArray[0][1].test(textString) && timeArray[1][1].test(textString)) {wednesdayPM = true;}
-// 		}
-// 	}
-// }
-
-// var getTime = function(timeArray, textString){
-// 	for (var i = 0; i < timeArray.length; i++) {
-// 		for (var j = 0; j < timeArray.length; j++) {
-// 			if (timeArray[0][0].test(textString) && timeArray[1][0].test(textString)) return "tuesdayAM";
-// 			if (timeArray[0][1].test(textString) && timeArray[1][0].test(textString)) return "wednesdayAM";
-// 			if (timeArray[0][0].test(textString) && timeArray[1][1].test(textString)) return "tuesdayPM";
-// 			if (timeArray[0][1].test(textString) && timeArray[1][1].test(textString)) return "wednesdayPM";
-// 		}
-// 	}
-// }
+	// this was for testing and saving for now. 
+	// if(!nameEntered()) {console.log("no name")}
+	// if(!validEmailAddress()) {console.log("invalid email")}
+	// if(!activitySelected()) {console.log("no activity selected")}
+	// if(!paymentOptionSelected()) {console.log("no payment option selected")}
+	// if(!ccvAndZipEntered()) {console.log("no ccv and zip selected")}
+	// if(!validCreditCard($("#cc-num").val()) || $("#cc-num").val() === "") {console.log("invalid credit card")}
