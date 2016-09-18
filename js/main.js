@@ -116,13 +116,127 @@ checkboxes.change(function(){
 
 });
 
-$("fieldset:last div p")['0'].classList = "is-hidden"
+function hideParagraphs() {
+	$("fieldset:last div p").addClass("is-hidden");
+}
+hideParagraphs();
 
-console.log($("fieldset:last div")['4']);
-console.log($("fieldset:last div")['5']);
+
+$("#payment").change(function(){
+	if ($(this).val() === "credit card") {
+		$("#credit-card").removeClass("is-hidden");
+		hideParagraphs();
+	} else if ($(this).val() === "paypal") {
+		$("#credit-card").addClass("is-hidden");
+		$("fieldset:last div p")['0'].classList = "";
+		$("fieldset:last div p")['1'].classList = "is-hidden";
+	} else if ($(this).val() === "bitcoin") {
+		$("#credit-card").addClass("is-hidden");
+		$("fieldset:last div p")['0'].classList = "is-hidden";
+		$("fieldset:last div p")['1'].classList = "";
+	}
+
+});
 
 
 
+
+
+
+$("button").mousedown(function() {
+	// console.log(activitySelected());
+	ccvAndZip();
+	// console.log("name entered");
+	// console.log($("#name").val());
+
+	// console.log("valid email");
+	// console.log(validEmail.test($("#mail").val())); //email address validated
+
+	// console.log("activity selected");
+	// console.log(activitySelected());
+
+	// console.log("selected payment (should not equal select_method)");
+	// console.log($("#payment").val());  //payment method selected
+
+	// console.log("valid CC");
+	// console.log(valid_credit_card($("#cc-num").val())); //credit card validated
+
+
+	// if ($("#name").val() === "" || (!validEmail.test($("#mail").val())) || !activitySelected()) {
+	// 	invalidForm();
+	// }
+})
+
+// function which checks if a name has been entered
+function nameEntered() {
+	return ($("#name").val() !== "") ? true : false
+}
+
+// function which checks the validity of the email address
+function validEmailAddress() {
+	var validEmail = new RegExp(/^[-a-z0-9~!$%^&*_=+}{\'?]+(\.[-a-z0-9~!$%^&*_=+}{\'?]+)*@([a-z0-9_][-a-z0-9_]*(\.[-a-z0-9_]+)*\.(aero|arpa|biz|com|coop|edu|gov|info|int|mil|museum|name|net|org|pro|travel|mobi|[a-z][a-z])|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?$/i);
+	return validEmail.test($("#mail").val());
+}
+
+
+// function which determines if an activity has been selected by user
+function activitySelected() {
+	var selectedActivityCount = 0; 
+	$.each($("input[type='checkbox']"), function() {
+		if ($(this).prop("checked")) {
+			selectedActivityCount += 1;
+		}
+	})
+	return (selectedActivityCount > 0) ? true : false
+}
+
+// function which determines if a payment option has been selected
+function paymentOptionSelected() {
+	return ($("#payment").val() !== "select_method") ? true : false
+}
+
+// function which determins if a zip code and 3 digit ccv number has been selected
+
+function ccvAndZip() {
+	var zip = $("#zip").val();
+	console.log(zip);
+}
+
+ccvAndZip();
+// functioin which checks the validity of the credit card number entered
+// pulled this from DiegoSalazar on github. I don't need to reinvent the wheel
+function validCreditCard(value) {
+  // accept only digits, dashes or spaces
+	if (/[^0-9-\s]+/.test(value)) return false;
+	// The Luhn Algorithm.
+	var nCheck = 0, nDigit = 0, bEven = false;
+	value = value.replace(/\D/g, "");
+	for (var n = value.length - 1; n >= 0; n--) {
+		var cDigit = value.charAt(n),
+			  nDigit = parseInt(cDigit, 10);
+		if (bEven) {
+			if ((nDigit *= 2) > 9) nDigit -= 9;
+		}
+		nCheck += nDigit;
+		bEven = !bEven;
+	}
+	return (nCheck % 10) == 0;
+}
+
+
+// function which sets the form to invalid
+function invalidForm() {
+	$(".shirt legend p").remove();
+	$("label[for='name']").text("Name: (Please provide your name)").css("color", "red");
+	$("label[for='mail']").text("Email: (Please provide a valid email address)").css("color", "red");
+	$(".activities legend").css("color", "red");
+	$("fieldset:last legend").css("color", "red");
+	$("#credit-card label[for='cc-num']").css("color", "red");
+	$("#credit-card label[for='zip']").css("color", "red");
+	$("#credit-card label[for='cvv']").css("color", "red");
+	$(".shirt legend").append("<p>Don't forget to pick a T-Shirt</p>");
+	$(".shirt legend p").css("color", "red");
+}
 
 
 
