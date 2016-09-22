@@ -1,9 +1,11 @@
 // Set focus on the first text field
-// puts the name field in focus on load
+// puts the name field in focus on load and hides selected elements
 $( document ).ready( function(){
   $("#name").focus();
+  hideParagraphs();
+  hideColorOptions();
+  disableCreditCard();
 });
-
 
 // Job Role section of the form. Reveal a text field when the "Other" option is selected from the "Job Role" drop down menu
 // function which creates the other job title text field
@@ -30,7 +32,12 @@ $("#title").change(function(){
 });
 
 // this section changes the design color drop down menu
+// I don't like this solution, but this is what I came up with first and it works. 
 $("#design").change(function() {
+	if ($("#design").val() === "Select Theme") {
+	hideColorOptions();
+} else {
+	displayColorOptions();
 	removeAllColorOptions();
 	var jsPuns = "(JS Puns shirt only)";
 	var hearJS = "(I";
@@ -60,6 +67,7 @@ $("#design").change(function() {
 			});
 				$("#color")[0].selectedIndex = 0;
 	}
+}
 
 });
 
@@ -119,18 +127,12 @@ $('[type=checkbox]').change(function(){
 
 });
 
-// this is the section which hides the payment infomation which is not selected.
-
-function hideParagraphs() {
-	return $("fieldset:last div p").addClass("is-hidden");
-}
-hideParagraphs();
-
 // this is the part that changes what is displayed based on the payment option selected
 $("#payment").change(function(){
 	if ($(this).val() === "credit card") {
-		$("#credit-card").removeClass("is-hidden");
+		enableCreditCard();
 		hideParagraphs();
+		$("#credit-card").removeClass("is-hidden");
 	} else if ($(this).val() === "paypal") {
 		$("#credit-card").addClass("is-hidden");
 		$("fieldset:last div p")['0'].classList = "";
@@ -139,17 +141,29 @@ $("#payment").change(function(){
 		$("#credit-card").addClass("is-hidden");
 		$("fieldset:last div p")['0'].classList = "is-hidden";
 		$("fieldset:last div p")['1'].classList = "";
+	} else if ($(this).val() === "select_method") {
+		$("#credit-card").removeClass("is-hidden");
+		disableCreditCard(); 
 	}
 });
 
 // button mousedown function which checks validation
 // now this, this I like this solution
-$("button").mousedown(function() {
-	if(!nameEntered() || ! validEmailAddress() || !activitySelected() || !paymentOptionSelected() || !ccvAndZipEntered()) {
-		if ($("#payment").val() !== "credit card") {
-			invalidForm();
-		} else {
-			if(!validCreditCard($("#cc-num").val()) || $("#cc-num").val() === "") {
+$("button").click(function(event) {
+	console.log("ccv and zip");
+	console.log(ccvAndZipEntered());
+
+	if(!nameEntered() || ! validEmailAddress() || !activitySelected()) {
+		event.preventDefault();
+		invalidForm();
+	}
+	if(!paymentOptionSelected()) {
+		event.preventDefault();
+		invalidForm();
+	} else {
+		if($("#payment").val() === "Credit Card") {
+				if(!validCreditCard($("#cc-num").val()) || $("#cc-num").val() === "" || !ccvAndZipEntered()) {
+				event.preventDefault();
 				invalidForm();
 			}
 		}
@@ -166,7 +180,6 @@ function validEmailAddress() {
 	var validEmail = new RegExp(/^[-a-z0-9~!$%^&*_=+}{\'?]+(\.[-a-z0-9~!$%^&*_=+}{\'?]+)*@([a-z0-9_][-a-z0-9_]*(\.[-a-z0-9_]+)*\.(aero|arpa|biz|com|coop|edu|gov|info|int|mil|museum|name|net|org|pro|travel|mobi|[a-z][a-z])|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?$/i);
 	return validEmail.test($("#mail").val());
 }
-
 
 // function which determines if an activity has been selected by user
 function activitySelected() {
@@ -220,14 +233,39 @@ function invalidForm() {
 	$("#credit-card label[for='cc-num']").css("color", "red");
 	$("#credit-card label[for='zip']").css("color", "red");
 	$("#credit-card label[for='cvv']").css("color", "red");
-	$(".shirt legend").append("<p>Don't forget to pick a T-Shirt</p>");
-	$(".shirt legend p").css("color", "red");
+	if ($("#design").val() === "Select Theme") {
+		$(".shirt legend").append("<p>Don't forget to pick a T-Shirt</p>");
+		$(".shirt legend p").css("color", "red");
+	}
+
 }
 
-	// this was for testing and saving for now. 
-	// if(!nameEntered()) {console.log("no name")}
-	// if(!validEmailAddress()) {console.log("invalid email")}
-	// if(!activitySelected()) {console.log("no activity selected")}
-	// if(!paymentOptionSelected()) {console.log("no payment option selected")}
-	// if(!ccvAndZipEntered()) {console.log("no ccv and zip selected")}
-	// if(!validCreditCard($("#cc-num").val()) || $("#cc-num").val() === "") {console.log("invalid credit card")}
+// disables the credit card inputs until credit card is selected. 
+function disableCreditCard() {
+	$("#cc-num").prop('disabled', true);
+	$("#zip").prop('disabled', true);
+	$("#cvv").prop('disabled', true);
+}
+ 
+// enable the credit card inputs when the credit card is selected
+function enableCreditCard() {
+	$("#cc-num").prop('disabled', false);
+	$("#zip").prop('disabled', false);
+	$("#cvv").prop('disabled', false);
+}
+
+// this is the section which hides the payment infomation which is not selected.
+function hideParagraphs() {
+	return $("fieldset:last div p").addClass("is-hidden");
+}
+
+function hideColorOptions() {
+	return $("#colors-js-puns").addClass("is-hidden");
+}
+
+function displayColorOptions() {
+	return $("#colors-js-puns").removeClass("is-hidden");
+}
+
+
+
