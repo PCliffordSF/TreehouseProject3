@@ -4,7 +4,6 @@ $( document ).ready( function(){
   $("#name").focus();
   hideParagraphs();
   hideColorOptions();
-  disableCreditCard();
 });
 
 // Job Role section of the form. Reveal a text field when the "Other" option is selected from the "Job Role" drop down menu
@@ -68,14 +67,12 @@ $("#design").change(function() {
 				$("#color")[0].selectedIndex = 0;
 	}
 }
-
 });
 
 var totalCost = 0;
 // if I did this again, I would use a function in place of this global variable 
 // this updates the total cost of the boxes selected
 $('[type=checkbox]').change(function(){
-
 	if ( $(this)['0'].checked && $(this)['0'].name === "all"){
 		totalCost += 200;
 	} else if (!($(this)['0'].checked) && $(this)['0'].name === "all") {
@@ -118,7 +115,6 @@ $('[type=checkbox]').change(function(){
 	} else if ($(this)['0'].name === 'js-frameworks' && !$(this)['0'].checked) {
 		arrayOfActivities[3].children['0'].disabled = false;
 	
-
 	} else if ($(this)['0'].name === 'express' && $(this)['0'].checked) {
 		arrayOfActivities[1].children['0'].disabled = true;
 	} else if ($(this)['0'].name === 'express' && !$(this)['0'].checked) {
@@ -130,7 +126,6 @@ $('[type=checkbox]').change(function(){
 // this is the part that changes what is displayed based on the payment option selected
 $("#payment").change(function(){
 	if ($(this).val() === "credit card") {
-		enableCreditCard();
 		hideParagraphs();
 		$("#credit-card").removeClass("is-hidden");
 	} else if ($(this).val() === "paypal") {
@@ -143,32 +138,57 @@ $("#payment").change(function(){
 		$("fieldset:last div p")['1'].classList = "";
 	} else if ($(this).val() === "select_method") {
 		$("#credit-card").removeClass("is-hidden");
-		disableCreditCard(); 
 	}
 });
 
 // button mousedown function which checks validation
 // now this, this I like this solution
 $("button").click(function(event) {
-	console.log("ccv and zip");
-	console.log(ccvAndZipEntered());
+	isFormValid(event);
+});
 
-	if(!nameEntered() || ! validEmailAddress() || !activitySelected()) {
-		event.preventDefault();
-		invalidForm();
+// checks the validity of the form
+function isFormValid(event) {
+	resetFormColors();
+	var invalidateForm = false;
+	if (!nameEntered()) {
+		$("label[for='name']").text("Name: (Please provide your name)").css("color", "red");
+		invalidateForm = true;
 	}
-	if(!paymentOptionSelected()) {
-		event.preventDefault();
-		invalidForm();
-	} else {
-		if($("#payment").val() === "Credit Card") {
-				if(!validCreditCard($("#cc-num").val()) || $("#cc-num").val() === "" || !ccvAndZipEntered()) {
-				event.preventDefault();
-				invalidForm();
-			}
+	if (!validEmailAddress()) {
+		$("label[for='mail']").text("Email: (Please provide a valid email address)").css("color", "red");
+		invalidateForm = true;
+	}
+	if (!activitySelected()) {
+		$(".activities legend").css("color", "red");
+		invalidateForm = true;
+	}
+	if (!teeShirtSelected()) {
+		console.log("invalide tee-shirt");
+		console.log($("#design").val());
+		$(".shirt legend").append("<p>Don't forget to pick a T-Shirt</p>");
+		$(".shirt legend p").css("color", "red");
+		invalidateForm = true;
+	}
+	if ($("#payment").val() === "select_method") {
+		$("fieldset:last legend").css("color", "red");
+		invalidateForm = true;
+	}
+	if ($("#payment").val() === "credit card") {
+		if(!validCreditCard($("#cc-num").val()) || $("#cc-num").val() === "") {
+			$("#credit-card label[for='cc-num']").css("color", "red");
+			invalidateForm = true;
+		}
+		if (!ccvAndZipEntered()) {
+			$("#credit-card label[for='zip']").css("color", "red");
+			$("#credit-card label[for='cvv']").css("color", "red");
+			invalidateForm = true;
 		}
 	}
-});
+	if (invalidateForm) {
+		event.preventDefault();
+	}
+}
 
 // function which checks if a name has been entered
 function nameEntered() {
@@ -179,6 +199,11 @@ function nameEntered() {
 function validEmailAddress() {
 	var validEmail = new RegExp(/^[-a-z0-9~!$%^&*_=+}{\'?]+(\.[-a-z0-9~!$%^&*_=+}{\'?]+)*@([a-z0-9_][-a-z0-9_]*(\.[-a-z0-9_]+)*\.(aero|arpa|biz|com|coop|edu|gov|info|int|mil|museum|name|net|org|pro|travel|mobi|[a-z][a-z])|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?$/i);
 	return validEmail.test($("#mail").val());
+}
+
+// function which checks to see if a tee-shirt has been selected .
+function teeShirtSelected() {
+		return (!($("#design").val() == "Select Theme")) ? true : false;
 }
 
 // function which determines if an activity has been selected by user
@@ -192,15 +217,12 @@ function activitySelected() {
 	return (selectedActivityCount > 0) ? true : false;
 }
 
-// function which determines if a payment option has been selected
-function paymentOptionSelected() {
-	return ($("#payment").val() !== "select_method") ? true : false;
-}
-
 // function which determins if a zip code and 3 digit ccv number has been selected
 // I didn't validate these, I could but it's time to move on to the next project, and it's an unrequested feature.
 function ccvAndZipEntered() {
-	return ($("#zip").val() !== "" && $("#cvv").val() !== "") ? true : false;
+	var zipVal = /^\d{5}$|^\d{5}-\d{4}$/;
+	var cvvVal = /^\d{3}$/;
+	return zipVal.test($("#zip").val()) && cvvVal.test($("#cvv").val());
 }
 
 // functioin which checks the validity of the credit card number entered
@@ -223,35 +245,16 @@ function validCreditCard(value) {
 	return (nCheck % 10) === 0;
 }
 
-// function which sets the form to invalid
-function invalidForm() {
+// function which resets the form colors on submission, so they are black if corrected
+function resetFormColors() {
 	$(".shirt legend p").remove();
-	$("label[for='name']").text("Name: (Please provide your name)").css("color", "red");
-	$("label[for='mail']").text("Email: (Please provide a valid email address)").css("color", "red");
-	$(".activities legend").css("color", "red");
-	$("fieldset:last legend").css("color", "red");
-	$("#credit-card label[for='cc-num']").css("color", "red");
-	$("#credit-card label[for='zip']").css("color", "red");
-	$("#credit-card label[for='cvv']").css("color", "red");
-	if ($("#design").val() === "Select Theme") {
-		$(".shirt legend").append("<p>Don't forget to pick a T-Shirt</p>");
-		$(".shirt legend p").css("color", "red");
-	}
-
-}
-
-// disables the credit card inputs until credit card is selected. 
-function disableCreditCard() {
-	$("#cc-num").prop('disabled', true);
-	$("#zip").prop('disabled', true);
-	$("#cvv").prop('disabled', true);
-}
- 
-// enable the credit card inputs when the credit card is selected
-function enableCreditCard() {
-	$("#cc-num").prop('disabled', false);
-	$("#zip").prop('disabled', false);
-	$("#cvv").prop('disabled', false);
+	$("label[for='name']").text("Name:").css("color", "black");
+	$("label[for='mail']").text("Email:").css("color", "black");
+	$(".activities legend").css("color", "black");
+	$("fieldset:last legend").css("color", "black");
+	$("#credit-card label[for='cc-num']").css("color", "black");
+	$("#credit-card label[for='zip']").css("color", "black");
+	$("#credit-card label[for='cvv']").css("color", "black");
 }
 
 // this is the section which hides the payment infomation which is not selected.
@@ -266,6 +269,4 @@ function hideColorOptions() {
 function displayColorOptions() {
 	return $("#colors-js-puns").removeClass("is-hidden");
 }
-
-
 
